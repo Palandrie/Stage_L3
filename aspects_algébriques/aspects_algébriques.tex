@@ -129,7 +129,7 @@ On appelle respectivement $E,H_1,H_1',H_2,H_2'$ et $o$ les vecteurs représentan
 
 Les graphes de calculs sont une autre façon de représenter l'exécution d'un réseau de neurones, en mettant en évidence la structure des calculs.
 
-Commençons par un exemple. Nous définissons la fonction $f(x,y,z)=e^{(x^2-y^2)z}$. Son graphe de calcul est représenté en Figure \ref{fig:ex_graphe_calcul}.
+Commençons par un exemple. Nous définissons la fonction $f(x,y,z)=xe^{(x^2-y^2)z}$. Son graphe de calcul est représenté en Figure \ref{fig:ex_graphe_calcul}.
 
 \begin{figure}[!h]
 \label{fig:ex_graphe_calcul}
@@ -142,22 +142,28 @@ Commençons par un exemple. Nous définissons la fonction $f(x,y,z)=e^{(x^2-y^2)
     \node[draw, rectangle] (y) at (0, -2) {$y$};
     \node[draw, rectangle] (z) at (6, -3.5) {$z$};
 
-    \node[draw, circle] (x2) at (3, 0) {$a=x^2$};
+    \node[draw, circle] (a) at (3, 0) {$a=x^2$};
     \node[draw, circle] (y2) at (3, -2) {$b=y^2$};
     \node[draw, circle] (x2miny2) at (6, -1) {$c=a - b$};
     \node (minsymb) [left=0.15 of x2miny2] {$-$};
     \node[draw, circle] (prod) at (9, -2) {$d=cz$};
     \node (multsymb) [left=0.15 of prod] {$\times$};
-    \node[draw, circle] (exp) at (12, -2) {$e=e^{d}$};
+    \node[draw, circle] (exp) at (12, -2) {$e=e^d$};
+    \node[draw,circle] (prodfin) at (15,-1) {$g=xe$};
+    \node [left=0.15 of prodfin] {$\times$};
+    \node (out) at (17.5,-1) {$f(x,y,z)$};
     
     % Arrows
-    \draw[->] (x) -- node[midway,above] {$t \mapsto t^2$} (x2);
+    \draw[->] (x) -- node[midway,above] {$t \mapsto t^2$} (a);
     \draw[->] (y) -- node[midway,above] {$t \mapsto t^2$} (y2);
-    \draw[->] (x2) -- (x2miny2);
+    \draw[->] (a) -- (x2miny2);
     \draw[->] (y2) -- (x2miny2);
     \draw[->] (x2miny2) -- (prod);
     \draw[->] (z) -- (prod);
     \draw[->] (prod) -- node[midway,above] {$t \mapsto e^t$} (exp);
+    \draw[->] (exp) -- (prodfin);
+    \path[bend left=30] (x) edge (prodfin);
+    \draw[->] (prodfin) -- (out);
 
 \end{tikzpicture}
 \caption{Graphe de calcul de la fonction $f$}
@@ -201,16 +207,69 @@ Pour le réseau de neurones $N$, en considérant les opérations sur les vecteur
 
 \subsection{Graphes de calculs - \textit{Backward pass}}
 
+\begin{figure}[!h]
+	
+	\begin{tikzpicture}
+	
+	% Nodes
+    \node[draw, rectangle] (x) at (0.5, 0) {$x$};
+    	\node [below=0.1 of x] {$\frac{\partial f}{\partial x} = -2x^2ze^d + h $};
+    \node[draw, rectangle] (y) at (0.5, -2.5) {$y$};
+        \node [below=0.1 of y] {$\frac{\partial f}{\partial y} = -2xyze^d$};
+    \node[draw, rectangle] (z) at (6, -3.5) {$z$};
+        \node [below=0.1 of z] {$\frac{\partial f}{\partial z} = cxe^d$};
+
+    \node[draw, circle] (a) at (3, 0) {$a=x^2$};
+        \node [below=0.1 of a] {$\frac{\partial f}{\partial a} = zxe^d$};
+    \node[draw, circle] (b) at (3, -2.5) {$b=y^2$};
+        \node [below=0.1 of b] {$\frac{\partial f}{\partial b} = -zxe^d$};
+    \node[draw, circle] (c) at (6, -1) {$c=a - b$};
+        \node [below=0.1 of c] {$\frac{\partial f}{\partial c} = zxe^d$};
+    \node (minsymb) [left=0.15 of c] {$-$};
+    \node[draw, circle] (prod) at (9, -2) {$d=cz$};
+        \node [below=0.1 of prod] {$\frac{\partial f}{\partial d} = xe^d$};
+    \node (multsymb) [left=0.15 of prod] {$\times$};
+    \node[draw, circle] (exp) at (12, -2) {$h=e^d$};
+        \node [below=0.1 of exp] {$\frac{\partial f}{\partial h} = x$};
+    \node[draw,circle] (prodfin) at (14.5,-1) {$g=xh$};
+    	\node [below=0.1 of prodfin] {$\frac{\partial f}{\partial g} = 1$};
+    \node [left=0.15 of prodfin] {$\times$};
+    \node (out) at (17,-1) {$f(x,y,z)$};
+    
+    % Arrows
+    \draw[->] (x) -- node[midway,above] {$t \mapsto t^2$} (a);
+    \draw[->] (y) -- node[midway,above] {$t \mapsto t^2$} (b);
+    \draw[->] (a) -- (c);
+    \draw[->] (b) -- (c);
+    \draw[->] (c) -- (prod);
+    \draw[->] (z) -- (prod);
+    \draw[->] (prod) -- node[midway,above] {$t \mapsto e^t$} (exp);
+    \draw[->] (exp) -- (prodfin);
+    \path[bend left=30] (x) edge (prodfin);
+    \draw[->] (prodfin) -- (out);	
+	
+	\end{tikzpicture}
+	
+\label{fig:backward_pass_ex}
+\caption{Exemple de \textit{backward pass}.}
+\end{figure}
+
 Les graphes de calcul tels que représentés précédemment permettent de simuler une exécution du réseau de neurones ou de la fonction considérée. Cependant, leur intérêt ne se limite pas à cela puisqu'ils permettent aussi de calculer efficacement le gradient de la fonction considérée en remontant le graphe, c'est la \textit{backward pass}.
 
 L'idée repose sur la règle de la chaine : 
 	$$ \frac{\partial f}{\partial x} = \underset{y \text{ child of }x}{\sum} \frac{\partial y}{\partial x} \frac{\partial f}{\partial y} $$
+	
+	Formellement, on voit d'abord $f$ comme une fonction de $g$ (la fonction identité) et on a donc $\frac{\partial f(g)}{\partial g} = 1$. Puis on voit $g$ comme une fonction de $x$ et $e$ et on a $\frac{\partial f(g(x,e))}{\partial e}=x$, puis on voit $e$ comme une fonction de $d$ et ainsi de suite jusqu'à obtenir $\frac{\partial f}{\partial x}$, $\frac{\partial f}{\partial y}$ et $\frac{\partial f}{\partial z}$ qui sont les trois coordonnées du gradient de $f$.\\
+	
+	Le résultat de ces opérations sur le graphe de calcul est montré en figure \ref{fig:backward_pass_ex}.
 
 \section{Provenance}
 
-Nous souhaitons abstraire
+Nous souhaitons abstraire les méthodes précédentes à travers une strucuture algébrique adaptée, de façon analogue à la provenance par semi-anneaux dans les bases de données introduite dans [Green et al.].
 
 	\subsection{Généralisation par les semi-anneaux}
+
+	L'idée la plus directe consiste à remplacer
 
 	\subsection{Généralisation}
 

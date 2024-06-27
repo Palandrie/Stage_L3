@@ -3,6 +3,7 @@
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amssymb}
+\usepackage{amsthm}
 \usepackage{graphicx}
 \usepackage{tikz}
 \usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
@@ -12,6 +13,7 @@
 
 \usetikzlibrary{arrows.meta, positioning}
 
+\newtheorem{definition}{Definition}
 
 \begin{document}
 \maketitle
@@ -213,7 +215,7 @@ Pour le réseau de neurones $N$, en considérant les opérations sur les vecteur
 	
 	% Nodes
     \node[draw, rectangle] (x) at (0.5, 0) {$x$};
-    	\node [below=0.1 of x] {$\frac{\partial f}{\partial x} = -2x^2ze^d + h $};
+    	\node [below=0.1 of x] {$\frac{\partial f}{\partial x} = 2x^2ze^d + h $};
     \node[draw, rectangle] (y) at (0.5, -2.5) {$y$};
         \node [below=0.1 of y] {$\frac{\partial f}{\partial y} = -2xyze^d$};
     \node[draw, rectangle] (z) at (6, -3.5) {$z$};
@@ -250,26 +252,116 @@ Pour le réseau de neurones $N$, en considérant les opérations sur les vecteur
 	
 	\end{tikzpicture}
 	
-\label{fig:backward_pass_ex}
+\label{fig:backward_pass_ex_partial}
 \caption{Exemple de \textit{backward pass}.}
+\end{figure}
+
+\begin{figure}[!h]
+	
+	\begin{tikzpicture}
+	
+	% Nodes
+    \node[draw, rectangle] (x) at (0.5, 0) {$x$};
+    
+    \node[draw, rectangle] (y) at (0.5, -2.5) {$y$};
+    \node[draw, rectangle] (z) at (6, -3.5) {$z$};
+
+    \node[draw, circle] (a) at (3, 0) {$a=x^2$};
+    \node[draw, circle] (b) at (3, -2.5) {$b=y^2$};
+    \node[draw, circle] (c) at (6, -1) {$c=a - b$};
+    \node (minsymb) [left=0.15 of c] {$-$};
+    \node[draw, circle] (prod) at (9, -2) {$d=cz$};
+    \node (multsymb) [left=0.15 of prod] {$\times$};
+    \node[draw, circle] (exp) at (12, -2) {$h=e^d$};
+    \node[draw,circle] (prodfin) at (14.5,-1) {$g=xh$};
+    \node [left=0.15 of prodfin] {$\times$};
+    \node (out) at (17,-1) {$f(x,y,z)$};
+    
+    % Arrows
+    \draw[->] (x) -- node[midway,above] {$t \mapsto t^2$} 
+    node[midway,below] {$2x$} (a);
+    \draw[->] (y) -- node[midway,above] {$t \mapsto t^2$}
+    node[midway,below] {$2y$} (b);
+    \draw[->] (a) -- 
+    node[midway,below] {$1$} (c);
+    \draw[->] (b) -- 
+    node[midway,below] {$-1$} (c);
+    \draw[->] (c) -- 
+    node[midway,below] {$z$} (prod);
+    \draw[->] (z) -- 
+    node[midway,below] {$c$} (prod);
+    \draw[->] (prod) -- node[midway,above] {$t \mapsto e^t$} 
+    node[midway,below] {$e^d$} (exp);
+    \draw[->] (exp) -- 
+    node[midway,below] {$x$} (prodfin);
+    \path[bend left=30] (x) edge 
+    node[midway,below] {$h$} (prodfin);
+    \draw[->] (prodfin) -- 
+    node[midway,below] {$1$} (out);	
+	
+	\end{tikzpicture}
+	
+\label{fig:backward_pass_ex_edges}
+\caption{Exemple de \textit{backward pass} avec les annotations sur les arrêtes.}
 \end{figure}
 
 Les graphes de calcul tels que représentés précédemment permettent de simuler une exécution du réseau de neurones ou de la fonction considérée. Cependant, leur intérêt ne se limite pas à cela puisqu'ils permettent aussi de calculer efficacement le gradient de la fonction considérée en remontant le graphe, c'est la \textit{backward pass}.
 
 L'idée repose sur la règle de la chaine : 
-	$$ \frac{\partial f}{\partial x} = \underset{y \text{ child of }x}{\sum} \frac{\partial y}{\partial x} \frac{\partial f}{\partial y} $$
+	\begin{equation} 
+	\label{eq:regle_de_la_chaine}
+	\frac{\partial f}{\partial x} = \underset{y \text{ child of }x}{\sum} \frac{\partial y}{\partial x} \frac{\partial f}{\partial y}
+	\end{equation}
+		
 	
 	Formellement, on voit d'abord $f$ comme une fonction de $g$ (la fonction identité) et on a donc $\frac{\partial f(g)}{\partial g} = 1$. Puis on voit $g$ comme une fonction de $x$ et $e$ et on a $\frac{\partial f(g(x,e))}{\partial e}=x$, puis on voit $e$ comme une fonction de $d$ et ainsi de suite jusqu'à obtenir $\frac{\partial f}{\partial x}$, $\frac{\partial f}{\partial y}$ et $\frac{\partial f}{\partial z}$ qui sont les trois coordonnées du gradient de $f$.\\
 	
-	Le résultat de ces opérations sur le graphe de calcul est montré en figure \ref{fig:backward_pass_ex}.
+	Le résultat de ces opérations sur le graphe de calcul est montré en figure \ref{fig:backward_pass_ex_partial}. L'équation \ref{eq:regle_de_la_chaine} nous dit que la dérivée partielle de $f$ par rapport à une variable $v$ est la provenance de $v$ à $f$ pour le semi-anneau des réels (ou des fonctions à valeur dans les réels).
 
 \section{Provenance}
 
 Nous souhaitons abstraire les méthodes précédentes à travers une strucuture algébrique adaptée, de façon analogue à la provenance par semi-anneaux dans les bases de données introduite dans [Green et al.].
 
-	\subsection{Généralisation par les semi-anneaux}
+	\subsection{Généralisation directe par les semi-anneaux}
 
-	L'idée la plus directe consiste à remplacer
+	L'idée la plus directe consiste à remplacer les calculs sur les réels par des calculs dans un semi-anneau (une multiplication $M V$ entre une matrice $M$ et un vecteur $V$ ne fait intervenir que des additions et multiplications d'éléments). Cependant, il est difficile d'intégrer les non-linéarités dans cette structure.
+
+	\subsection{Semi-anneau de fonctions}
+	
+	En regardant la structure du graphe de calcul, chaque n\oe ud représente une fonction des données d'entrée. On peut donc essayer d'abstraire le fonctionnement en faisant appel à de l'algèbre différentielle. 
+	
+	On commence par définir une dérivation sur les semi-anneaux :
+	
+	\begin{definition}
+	
+		Soit $(S,+,\cdot,0,1)$ un semi-anneau. Une dérivation sur $S$ est une application $d:S \to S$ vérifiant, pour tout $x,y \in S$ :
+		\begin{itemize}
+		 	\item $d(a+b)=d(a)+d(b)$
+		 	\item $d(ab)=d(a)b+ad(b)$
+		\end{itemize}
+
+	\end{definition}
+	
+	Cette définition implique que $d(0)=0$ mais pas que $d(1)=0$ (identité dans le semi-anneau des booléens). Est-ce qu'il faut ajouter cette hypothèse ? [littérature absente].
+	\\
+	
+	[Est-ce qu'on a envie que le semi-anneau commute ?]
+	On définit donc une structure $(F,+,\cdot,\circ',0,1,\{\partial x, \partial y,\partial z \} $ vérifiant :
+	\begin{itemize}
+	
+		\item $(F,+,\cdot,0,1)$ est un semi-anneau
+		
+		\item $\partial x, \partial y, \partial z$ sont des dérivations sur $S$
+		
+		\item $\partial x, \partial y, \partial z$ commutent : $\partial x \circ \partial y = \partial y \circ \partial x$,...
+		
+		\item $\circ'$ est une opération binaire et associative
+		
+		\item Si $d \in \{\partial x, \partial y,\partial z \}$, $d(a \circ' b)=(d(a)\circ'b)\cdot d(b)$
+	
+	\end{itemize}
+	
+	L'idée est de dire que ce qu'il se passe au dessus des arrêtes c'est la composition $\circ'$ et ce qu'il se passe en dessous c'est la propagation avec la provenance et les $\partial$.
 
 	\subsection{Généralisation}
 

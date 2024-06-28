@@ -13,6 +13,8 @@
 
 \usetikzlibrary{arrows.meta, positioning}
 
+\newcommand{\R}{\ensuremath{\mathbb{R}}}
+
 \newtheorem{definition}{Definition}
 
 \begin{document}
@@ -21,6 +23,7 @@
 \section{Exemples}
 
 	\subsection{Réseaux de neurones}
+	\label{subsec:ex_nn}
 
 On s'intéresse d'abord à des réseaux de neurones denses avec une fonction d'activation $f$.
 
@@ -204,7 +207,8 @@ Pour le réseau de neurones $N$, en considérant les opérations sur les vecteur
 
 
 \end{tikzpicture}
-
+\label{fig:graphe_calcul_nn}
+\caption{Le graphe de calcul du réseau de neurones $N$.}
 \end{figure}
 
 \subsection{Graphes de calculs - \textit{Backward pass}}
@@ -324,7 +328,7 @@ Nous souhaitons abstraire les méthodes précédentes à travers une strucuture 
 
 	\subsection{Généralisation directe par les semi-anneaux}
 
-	L'idée la plus directe consiste à remplacer les calculs sur les réels par des calculs dans un semi-anneau (une multiplication $M V$ entre une matrice $M$ et un vecteur $V$ ne fait intervenir que des additions et multiplications d'éléments). Cependant, il est difficile d'intégrer les non-linéarités dans cette structure.
+	L'idée la plus directe consiste à remplacer les calculs sur les réels par des calculs dans un semi-anneau (une multiplication $M V$ entre une matrice $M$ et un vecteur $V$ ne fait intervenir que des additions et multiplications d'éléments). Cependant, il est difficile d'intégrer les non-linéarités dans cette structure. On pourrait le faire pour ReLU en décidant que nous nous intéressons aux fonctions de la forme $x \mapsto \sigma(x)x$ où $\sigma$ est à valeur dans $0,1$ (dans le contexte des bases de données, $\sigma$ est une sélection), mais cette restriction empêche de généraliser le processus à LRP.
 
 	\subsection{Semi-anneau de fonctions}
 	
@@ -357,15 +361,19 @@ Nous souhaitons abstraire les méthodes précédentes à travers une strucuture 
 		
 		\item $\circ'$ est une opération binaire et associative
 		
+		\item $1 \circ' f = 1$ et $0 \circ' f = 0$.
+		
 		\item Si $d \in \{\partial x, \partial y,\partial z \}$, $d(a \circ' b)=(d(a)\circ'b)\cdot d(b)$
 	
 	\end{itemize}
 	
 	L'idée est de dire que ce qu'il se passe au dessus des arrêtes c'est la composition $\circ'$ et ce qu'il se passe en dessous c'est la propagation avec la provenance et les $\partial$.
+	
+	Problèmes : les dérivées partielles ne sont pas uniquement prises relativement à $x,y,z$, mais l'intérêt de la chose c'est précisément que l'on prend la dérivée d'une fonction dans un n\oe ud par rapport à ses parents ; l'idée généralise assez naturellement les graphes de calculs mais l'application à LRP risque d'être artificielle ; la structure algébrique n'a pas l'air d'avoir été beaucoup utilisée avant.
 
-	\subsection{Généralisation}
+	\subsection{Provenance fine}
 
-	Du point de vue de cette provenance fine, on distingue trois grandes catégries d'objets. La première est constituée des éléments $x_1$, $x_2$ de l'input et des biais $b$, la deuxième est constituée des coefficients des matrices $a_{i,j}$ et la troisième est constituée de fonctions $f$. Nous appelons $E$ le premier ensemble, $A$ le deuxième et $F$ le troisième.
+	On cherche à raisonner au niveau le plus fin possible, c'est-à-dire sur les équations du paragraphe \ref{subsec:ex_nn}. On distingue trois grandes catégries d'objets. La première est constituée des éléments $x_1$, $x_2$ de l'input et des biais $b$, la deuxième est constituée des coefficients des matrices $a_{i,j}$ et la troisième est constituée de fonctions $f$. Nous appelons $E$ le premier ensemble, $A$ le deuxième et $F$ le troisième.
 	
 	Afin d'abstraire ce fonctionnement, il convient de trouver des structures adaptées pour ces trois catégories. Pour cela nous commençons par quelques observations :
 	
@@ -381,5 +389,24 @@ Nous souhaitons abstraire les méthodes précédentes à travers une strucuture 
 		\item L'ensemble $E$ est muni d'une opération $+$.
 	
 	\end{itemize}
+	
+	\subsection{Provenance grossière}
+	
+	On se fonde plutôt ici sur la présentation de la figure \ref{fig:graphe_calcul_nn}, qui correspond à la formule $Out=A_3f(A_2f(A_1 E))$ ou encore à l'écriture :
+	$\R^2 \overset{\times A_1}{\longrightarrow} \R^3 \overset{f}{\longrightarrow} \R^3 \overset{\times A_2}{\longrightarrow} \R^2 \overset{f}{\longrightarrow} \R^2 \overset{A_3}{\longrightarrow} \R$
+	
+	Les matrices correspondent donc à des fonctions qui modifient la structure dans laquelle se trouvent les vecteurs et les fonctions modifient la valeur des vecteurs sans modifier la structure.
+	De façon abstraite, on a donc $S_1 \overset{\varphi_1}{\longrightarrow} S_2 \overset{\overline{f}}{\longrightarrow} S_2 \overset{\varphi_2}{\longrightarrow} S_3 \overset{\overline{f}}{\longrightarrow} S_3 \overset{\varphi_3}{\longrightarrow} S_4$
+	
+	Problèmes : 
+	\begin{itemize}
+	
+		\item La modification de la structure complexifie significativement le processus
+	
+		\item Les vecteurs n'ont pas de structure algébrique évidente : sommer des vecteurs n'a pas nécessairement un sens dans notre contexte (la somme d'une image de 1 et d'une image de 2 ne veut plus rien dire), la dilatation par un scalaire n'est pas très éloquente non plus (mais peut-être moins absurde).
+		
+		\item Les matrices n'ont pas de structure algébrique évidente non plus (peut-être que les sommes/différences ont un sens lors des modifications manuelles des modèles.).
+		
+	\end{itemize}		
 
 \end{document}

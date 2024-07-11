@@ -2,3 +2,9 @@
 *.aux
 *.gz
 *.dvi
+*.bbl
+*.blg
+*.out
+*.nav
+*.snm
+*.toc

@@ -46,7 +46,7 @@
 
 We try to abstract the notion of \textit{computation graphs}, having in mind the particular example of neural networks.
 
-	Computation graphs are a type of graphs that represent a computation. Formally, in this work, we define a computation graph $(V,E,Fun,Op)$ as a directed acyclic graph $(V,E)$ together with a function $Fun:E \to F$ where $F$ is a set of functions $S \to S$ ($S$ is a fixed set, the same for all functions) and a function $Op:V \to Operator$ where $Operator$ is a set containing operators to aggregate several inputs in $S$. (Remark : usually in a computation graph, the functions are stored in the nodes and the edges represent a data dependency. We choose a different convention here to remain closer to provenance in graphs).
+	Computation graphs are a type of graphs that represent a computation. Formally, in this work, we define a computation graph $(V,E,Fun,Op)$ as a directed acyclic graph $(V,E)$ together with a function $Fun:E \to F$ where $F$ is a set of functions $S \to S$ ($S$ is a fixed set, the same for all functions) and a function $Op:V \to Operator$ where $Operator$ is a set containing operators to aggregate several inputs in $S$. (Remark : usually in a computation graph, the functions are stored in the nodes and the edges represent a data dependency. We choose a different convention here to remain closer to provenance in graphs as defined in [TODO:Ramusat].)
 	
 	For instance, if we want to compute the function $f(x)=e^{x^2}(x^2 + 2x + 2)$ using only the linear, "plus constant" and exponential functions, with $+$ and $\times$ operators, then we can model a possible computation with the computation graph :
 	
@@ -118,6 +118,8 @@ We try to abstract the notion of \textit{computation graphs}, having in mind the
 \section{Executing a computation}
 
 \subsection{Model}
+
+[TODO:Replace with topological ordering]
 
 	We attempt to characterize the minimal algebraic structure required to model a computation graph. We fix $S$ the domain of the functions and, keeping in mind our targeted use case, we assume that there is only one operator : $Operator = \{ + \}$. \\
 
@@ -317,7 +319,9 @@ We try to abstract the notion of \textit{computation graphs}, having in mind the
 \label{fig:drawings_algebraic_struct}
 \end{figure}
 
-Some additional remarks on the structure:
+Some additional remarks on the structure: [TODO: suppress the useless ones (redundant with what precedes]
+
+[TODO: the distributivity axiom and the composition axiom are both made so we can use some subpart of a graph as black-boxes. Can we prove that if we have a black-box graph representing a function $f$, we can indeed plot other graphs at the begining/ at the end and the concatenation represents $g\circ  f \circ h$ ?]
 
 
 	Since there is no natural order on incoming edges for a node, $+$ must be associative and commutative so the sum on incoming edges is well-defined. (For instance consider the node $c$ in Figure \ref{fig:graphe_calc_abstr}).

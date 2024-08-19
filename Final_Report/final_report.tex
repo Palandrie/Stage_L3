@@ -13,7 +13,13 @@
 \usepackage{subcaption}
 
 \usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
-\author{Paul LANDRIER}
+
+\usepackage[resetlabels,labeled]{multibib}
+
+\newcites{Comp}{Computation Graphs Bibliography}
+\newcites{Gnn}{GNN Bibliography}
+
+\author{Paul LANDRIER \\ Supervised by Silviu Maniu}
 \title{Internship Report}
 
 \newcommand{\bb}[1]{\mathbb{#1}}
@@ -36,6 +42,7 @@
 \usetikzlibrary{shapes}
 
 \newtheorem{theorem}{Theorem}
+\newtheorem{property}{Property}
 
 \newtheorem{definition}{Definition}
 \newtheorem{ns}{Near-semiring}
@@ -57,10 +64,11 @@
 
 \paragraph{abstract} TODO (Mention broad usage of computation graphs (compilers))
 
+Paragraph in model is a good starting poitn
 
 \section{Introduction}
 
-TODO
+TODO [Describe the interest of the computation]
 
 \section{Modeling a Computation}
 
@@ -68,7 +76,7 @@ TODO
 
 We try to abstract the notion of \textit{computation graphs}, having in mind the particular example of neural networks.
 
-	Computation graphs are a type of graphs that represent a computation. Formally, in this work, we define a computation graph $(V,E,Fun,Op)$ as a directed acyclic graph $(V,E)$ together with a function $Fun:E \to F$ where $F$ is a set of functions $S \to S$ ($S$ is a fixed set, the same for all functions) and a function $Op:V \to Operator$ where $Operator$ is a set containing operators to aggregate several inputs in $S$. (Remark : usually in a computation graph, the functions are stored in the nodes and the edges represent a data dependency. We choose a different convention here to remain closer to provenance in graphs as defined in [TODO:Ramusat].)
+	Computation graphs are a type of graphs that represent a computation. Formally, in this work, we define a computation graph $(V,E,Fun,Op)$ as a directed acyclic graph $(V,E)$ together with a function $Fun:E \to F$ where $F$ is a set of functions $S \to S$ ($S$ is a fixed set, the same for all functions) and a function $Op:V \to Operator$ where $Operator$ is a set containing operators to aggregate several inputs in $S$. (Remark : usually in a computation graph, the functions are stored in the nodes and the edges represent a data dependency. We choose a different convention here to remain closer to provenance in graphs as defined in \citeComp{ramusat_semiring-based_2022}. For an other definition of computation graphs, see for instance \citeComp{Wang2023}.)
 	
 	For instance, if we want to compute the function $f(x)=e^{x^2}(x^2 + 2x + 2)$ using only the linear, "plus constant" and exponential functions, with $+$ and $\times$ operators, then we can model a possible computation with the computation graph :
 	
@@ -135,18 +143,43 @@ We try to abstract the notion of \textit{computation graphs}, having in mind the
 \label{fig:perceptron}
 \end{figure}
 
+	Since a perceptron only uses one kind of aggregation -the sum-, we shall now only consider computation graphs with one unique operator to aggregate the functions. This operator is denoted $+$ and is implicitly attached to every node in the graph.\\
+
+In the algorithm \ref{alg:retrieve_fun}, we formalize the notion of ``function represented by a computation graph" by defining the algorithm to compute this function from the graph. We assume that there is only one node without any outgoing edge, which is the output of the computation graph, noted $out$. We also assume that we have a special function $f_v$ for each input node $v$. These special functions should be thought of as symbols, such as the ``$x$" in a definition of the form $f(x)=3x+2$.
+
+
+\begin{algorithm}
+\caption{Retrieving a function from a computation graph}
+\label{alg:retrieve_fun}
+\begin{algorithmic}[1]
+\STATE \textbf{Input:} Computation Graph $G = (V, E, Fun, Op)$.
+\STATE \textbf{Output:} The function represented by the graph.
+\STATE
+\STATE \textbf{Function} Retrieve(G):
+\STATE \quad Let $T$ be a topological ordering of $(V,E)$.
+\STATE \quad \textbf{Initialize:} $Function[v]$ = None for all $v \in V$
+\STATE \quad \textbf{for each} $v$ in $T$ \textbf{do}
+\STATE \quad \quad \textbf{if} $v$ is an input node \textbf{then}
+\STATE \quad \quad \quad $Function[v]=f_v$.
+\STATE \quad \quad \textbf{else}
+\STATE \quad \quad \quad \textbf{Initialize:} $f=0$
+\STATE \quad \quad \quad \textbf{for each} edge $e=(u,v)$ entering $v$ \textbf{do}
+\STATE \quad \quad \quad \quad $f=f + (Fun(e) \circ Function[u])$
+\STATE \quad \textbf{return} $Function[out]$
+\end{algorithmic}
+\end{algorithm}
+
+	In the section \ref{subsec:Properties of Generalized Computation Graphs}, we prove that the result does not depend on the topological ordering chosen in the execution of the algorithm.
+
 \subsection{Model}
 
+[TODO: is modularity a good term ?]
 
-	We attempt to characterize the minimal algebraic structure required to model a computation graph. We fix $S$ the domain of the functions and, keeping in mind our targeted use case, we assume that there is only one operator : $Operator = \{ + \}$. \\
+	In \citeComp{green_provenance_2007} and \citeComp{ramusat_semiring-based_2022}, the authors defined a set of identities and restrictions on the object of their studies (respectively relational databases and graph databases) and then used this set to identify an algebraic structure to theoretically model them.
+	
+	We follow the same method to characterize the minimal algebraic structure required to model a computation graph. An example of generalized computation graph is given in Figure \ref{fig:graphe_calc_abstr}. In what follows, we describe the different properties of computation graphs and traduce them algebraically. The process is summarized in the table of Figure \ref{fig:table_algebraic_structure} and specific instances where the described properties are necessary are presented in Figure \ref{fig:drawings_algebraic_struct}. In the examples of Figure \ref{fig:drawings_algebraic_struct}, the symbolic functions are omitted for better readability.
 
-	The full computation represented by the graph cannot be expressed in a similar fashion as for provenance in graphs ($\underset{\pi \in P_{x,y}}{\sum} w(\pi)$) because composition does not distribute over $+$. In a general computation graph, the algorithm to execute the computation consists of executing the nodes following a topological ordering (by executing a node we mean executing all the functions that enters the node, sum their result and store the value).
-\\
-
-[TODO:Write the algorithm (Topological ordering)]
-
-
-	\begin{figure}[!h]
+	\begin{figure}
 	\centering
 	\begin{tikzpicture}
 	
@@ -181,13 +214,22 @@ We try to abstract the notion of \textit{computation graphs}, having in mind the
 			{$f_8$} (e);
 		
 	\end{tikzpicture}
-	\caption{An abstract computation graph.}
+	\caption{A generalised computation graph.}
 	\label{fig:graphe_calc_abstr}
 	\end{figure}
 
 	\paragraph{Structure needed} We consider a structure $(F,\circ,+,0,id)$. The $+$ and $\circ$ are operators $F^2 \to F$ respectively used to model aggregation and composition in the computation graph.
 
-	Following what has been made in \textit{provenance semirings} by Green, Karvounarakis and Tannen and by Ramusat in its thesis, in order to identify the structure that best fits our application we try to identify some remarkable properties of computation graph to deduce some properties on the structure used to generalize them. We sum up the process in the table:
+Firstly, since there is no natural order on incoming edges for a node, $+$ must be associative and commutative so the sum on incoming edges is well-defined. For an example, see the Figure \ref{subfig:drawings_plus}.
+
+	We require the operator $\circ$ to be associative to ensure modularity. For an example, see the Figure \ref{subfig:drawings_comp}.
+
+	To abstract the concept of zero-weight, we require the existence of a neutral element $0$ which is a left absorbing element for the $\circ$ operator and which is a neutral element for $+$. For an example, see the Figure \ref{subfig:drawings_zero}.
+
+	We require the left distributivity $(f+g) \circ h = f \circ h + g \circ h$ beacuse it is of theoretical interest (it is necessary for the interpretation of near-semirings as sub-near-semirings of the the complete near-semiring over a monoid), because it is a natural identity to interpret the elements as functions and because it allows for a simplification of the computation in some cases. For an example, see the Figure \ref{subfig:drawings_distr}.
+
+	Finally, we require the existence of a neutral element $id$ for $\circ$. This might not be crucial, but it has interesting theoretical properties -it matters for theorem \ref{thm:near_semirings_fun_monoids}- and allows some natural representation. For an example, see the Figure \ref{subfig:drawings_id}.
+	\\
 
 	\begin{figure}
 		\centering
@@ -235,6 +277,7 @@ We try to abstract the notion of \textit{computation graphs}, having in mind the
 			\path[->,draw] (z) -- node[midway,above] {$f_3$} (res);
 		\end{tikzpicture}
 		\caption{A case that necessits the ``$+$" operator to be commutative and associative. Indeed, these two graphs are the same represented in two different ways, and the left one represent the element $(f_1+f_2)+f_3$ whereas the right one represents $(f_3 + f_2) + f_1$. Replacing $f_3$ by $0$ then shows that $+$ must be comutative, and using the commutativity of $+$ shows that the right expression is equal to $f_1 + (f_2 + f_3)$, so the associativity is required too.}
+		\label{subfig:drawings_plus}
 	\end{subfigure}
 
 	\begin{subfigure}{\textwidth}
@@ -262,6 +305,7 @@ We try to abstract the notion of \textit{computation graphs}, having in mind the
 		
 		\end{tikzpicture}	
 		\caption{Necessity of the associativity for the modularity. The fact that the graph below, which associated element is $h\circ (g \circ f)$, represents the same element as the composition of the two graphs above, which associated element is $(h \circ g) \circ f$, is equivalent to the associativity of $\circ$. Then we can say without ambiguity that they both represent $h \circ g \circ f$.}
+		\label{subfig:drawings_comp}
 	\end{subfigure}
 
 	\begin{subfigure}{\textwidth}
@@ -274,7 +318,8 @@ We try to abstract the notion of \textit{computation graphs}, having in mind the
 			\path[->,draw] (x) -- node[midway,above] {$0_F$} (res);
 			\path[->,dashed,draw] (x) -- (y);
 		\end{tikzpicture}	
-		\caption{Use-cases of the 0 weight. The plain arrow represent an existing edge with weight 0 (in the context of neural network for instance) and the dashed arrow represent an edge that does not exist and could be represented by the 0 element.}
+		\caption{Use-cases of the 0 weight. The plain arrow represent an existing edge with weight 0 (in the context of neural network for instance) and the dashed arrow represent an edge that does not exist and could be represented by the 0 element, which could for instance be used to model computation graphs as adjacency matrices.}
+		\label{subfig:drawings_zero}
 	\end{subfigure}
 
 	\begin{subfigure}{\textwidth}
@@ -291,6 +336,7 @@ We try to abstract the notion of \textit{computation graphs}, having in mind the
 			\path[->,draw] (y) edge [bend left=40] node[midway,above] {$i$} (t);
 		\end{tikzpicture}
 		\caption{Illustration of the modularity allowed by the right distributivity. We can factor the expression $i~\circ~f+h~\circ~g~\circ~f$ in the smaller one $(i + g \circ h) \circ f$.}
+		\label{subfig:drawings_distr}
 	\end{subfigure}
 
 	\begin{subfigure}{\textwidth}
@@ -303,26 +349,11 @@ We try to abstract the notion of \textit{computation graphs}, having in mind the
 			\path[->,draw] (x) edge [bend left=40] node[midway,above] {$id$} (y);
 		\end{tikzpicture}
 		\caption{A use case of the identity: representing $f(x) + x$.}
+		\label{subfig:drawings_id}
 	\end{subfigure}
 \caption{The situations that justify the different properties discussed in Figure \ref{fig:table_algebraic_structure}.}
 \label{fig:drawings_algebraic_struct}
 \end{figure}
-
-Some additional remarks on the structure: [TODO: suppress the useless ones (redundant with what precedes]
-
-[TODO: the distributivity axiom and the composition axiom are both made so we can use some subpart of a graph as black-boxes. Can we prove that if we have a black-box graph representing a function $f$, we can indeed plot other graphs at the begining/ at the end and the concatenation represents $g\circ  f \circ h$ ?]
-
-
-	Since there is no natural order on incoming edges for a node, $+$ must be associative and commutative so the sum on incoming edges is well-defined. (For instance consider the node $c$ in Figure \ref{fig:graphe_calc_abstr}).
-
-	We require the operator $\circ$ to be associative so that computations in the graph can proceed either from left to right or from right to left to retrieve the function it represents, and to ensure modularity, which allows us to define the function associated with a subgraph.
-
-	To abstract the concept of zero-weight, we require the existence of a neutral element $0$ which is a left absorbing element for the $\circ$ operator and which is a neutral element for $+$.
-
-	We require the left distributivity $(f+g) \circ h = f \circ h + g \circ h$ beacuse it is of theoretical interest (it is necessary for the interpretation of near-semirings as sub-near-semirings of the the complete near-semiring over a monoid), because it is a natural identity to interpret the elements as functions and because it allows for a simplification of the computation in some cases.
-
-	Finally, we require the existence of a neutral element $id$ for $\circ$. This might not be crucial and could change, but it has interexting theoretical properties (it allows to model the one node graph for instance, which can be useful to initialize some algorithms such as Retrieve earlier). 
-	\\
 
 The axiom identified are those of a near-semiring, with two differences (+ is not assumed to be commutative in general and the ``id" does not necessarily exist). In our case, we obtain the definition:
 
@@ -350,15 +381,21 @@ A sub-near-semiring of a near-semiring $(F,+,\circ,0,id)$ is a subset $G \subset
 
 If $(F,+,\circ,0,id)$ and $(G,+',\circ ',0',id')$ are two near-semirings, then $\phi : F \to G$ is said to be a near-semiring morphism if it satisfies $\phi(0)=0',\phi(id)=id',\forall (f,g) \in F^2, \phi(f+g) = \phi(f) +' \phi(g)$ and $ \phi(f \circ g)= \phi(f) \circ' \phi(g)$. The image $\phi(F)$ is a sub-near-semiring of $G$.
 
-[TODO: Write the proof to show that the algorithm does not depend on the topological ordering, and prove modularity]
+
 
 \subsection{Examples of Near-semirings}
 
-We should now study a few examples of near-semiring.
+Before establishing further theoretical results, we give a few examples of near-semirings. 
 
 \begin{ns}[Complete near-semiring over a monoid]
 \label{ns:ns_over_a_monoid}
-	Let $(M,+,0_M)$ be a monoid. We define $\mcal{F}$ the set of all functions $M \to M$. Then the tuple $(\mcal{F},+,\circ,0_F,id)$ where $0_F : x \mapsto 0_M$ is the zero function and $id : x \mapsto x$ is the identity function is a near-semiring, that we will call complete \Ns\ over $M$. A particular sub-\Ns\ of $\mcal{F}$ is the set of monoid endomorphisms of $M$ (it is even a semiring).
+	Let $(M,+,0_M)$ be a monoid. We define $\mcal{F}$ the set of all functions $M \to M$. Then $(\mcal{F},+,\circ,0_F,id)$ where $0_F : x \mapsto 0_M$ is the zero function and $id : x \mapsto x$ is the identity function is a near-semiring, that we will call complete \Ns\ over $M$. A particular sub-\Ns\ of $\mcal{F}$ is the set of monoid endomorphisms of $M$ (it is even a semiring). As we shall see later in this work, this is the most general kind of near-semiring in some sense.
+\end{ns}
+
+\begin{ns}[]
+
+The $\mathcal{C}^\infty$ functions over the real numbers form a near-semiring with usual addition, composition, zero function and identity.
+
 \end{ns}
 
 \begin{ns}[Semirings]
@@ -366,11 +403,49 @@ We should now study a few examples of near-semiring.
 	Let $(S,+,\cdot,0,1)$ be a semiring. Then $(S,+,\cdot,0,1)$ is also a \Ns . Indeed, the axioms of \Ns\ are stricly more general than those of a semiring. The interpretation of semirings as sets of function together with the interpretation of $\cdot$ as a composition can be made through the structure of semimodules, which is itself a sub-\Ns\ of the complete \Ns\ over a monoid.
 \end{ns}
 
-\begin{ns}{Matrices over a semiring}
+\subsection{Properties of Generalized Computation Graphs}
+\label{subsec:Properties of Generalized Computation Graphs}
 
-\end{ns}
+We now provide two theoretical properties on computation graphs. These two properties ensure that the model 
+
+\begin{property}
+	The output of algorithm \ref{alg:retrieve_fun} does not depend on the topological ordering chosen in the execution.
+\end{property}
+
+\begin{proof}
+
+	We consider a computation graph $G = (V,E,Fun,Op)$ and two topological orderings $T_1 ,T_2$. We note $n = |V|$. We use the notations of algorithm \ref{alg:retrieve_fun} with an index 1 or 2 to refer to the execution that is considered.
+	
+	 We proceed by induction on $i \in [|0,n|]$ with the hypothesis $H_i$: ''For all $1 \leq k \leq i$, if we note $v_k$ the $k$-th node according to the ordering $T_1$, then $Function_1[v_k]=Function_2[v_k]$".
+	 
+	 In the base case, $i=0$ and there is nothing to prove. We now consider $i \in [|0,n|]$, assume $H_i$ is verified and prove that $H_{i+1}$ is verified as well.
+	 
+	 We only need to prove that $Function_1[v_{i+1}]=Function_2[v_{i+1}]$.\\
+	 
+	 If $v_{i+1}$ is an input node, then $Function_1[v_{i+1}]=f_{v_{i+1}}=Function_2[v_{i+1}]$.
+	 
+	 Else, by definition, $Function_1[v_{i+1}]=\Sum{e=(u,v_{i+1}) \in E}{} Fun(e) \circ Function_1[u]$. However, since all the vertices $u$ that appear in the sum are before $v$ in the topologicale ordering, by the induction hypothesis this can be rewritten: $Function_1[v_{i+1}]=\Sum{e=(u,v_{i+1}) \in E}{} Fun(e) \circ Function_2[u]=Function_2[v_{i+1}]$, which conclude the proof.
+\end{proof}
+
+Note that the only thing required by the proof is that the result of the aggregation operation $+$ (denoted by $\sum$ in the computation) does not depend on the order of its arguments.\\
+
+\begin{property}[Modularity of computation graphs]
+	We consider two computation graphs $G_1,G_2$ with $G_1$ having only one output node and $G_2$ having only one input node. We define $G_{1 \circ 2}$ as the computation graph that contains the disjoint union of $G_1$ and $G_2$ with 
+\end{property}
+
+[TODO: the distributivity axiom and the composition axiom are both made so we can use some subpart of a graph as black-boxes. Can we prove that if we have a black-box graph representing a function $f$, we can indeed plot other graphs at the begining/ at the end and the concatenation represents $g\circ  f \circ h$ ?]
 
 \subsection{Universal Object}
+
+TODO write this properly:
+
+In Ramusat we had :
+	The full computation represented by the graph cannot be expressed in a similar fashion as for provenance in graphs ($\underset{\pi \in P_{x,y}}{\sum} w(\pi)$) because composition does not distribute over $+$.
+In Green : polynomials
+
+Us ?
+\\
+
 
 Given a \Ns\ $F$, we want to characterize the sub-near-semiring generated by a subset $G \subset F$. This notion makes sense for the usual reason: an intersection of sub-near-semiring is a \sns\ itself, and we note $<G>$ this \sns\ .
 
@@ -384,6 +459,7 @@ $$G_{n+1} = \left\{ \left. g \circ \left( \overset{k}{\underset{i=1}{\sum}} g_i 
 \subsection{Generality of the Complete Near-semiring over a Monoid.}
 
 \begin{theorem}{Universal Form of Near-semirings}
+\label{thm:near_semirings_fun_monoids}
 
 	It is equivalent to be given:
 
@@ -463,6 +539,9 @@ It might be interesting to note that for the example of computation graphs we re
 
 	[TODO]
 	
+	\bibliographystyleComp{apalike}
+	\bibliographyComp{biblio_computation_graphs}	
+	
 \section{Extra work - GNN Stability}
 	While investigating the possibility to theoretically model a neural network, I met a Ph.D student that was working on graph neural networks (GNN). GNNs are used to embed graphs in metric spaces and its objective is to extend this technique in order to embed databases.
 	
@@ -478,7 +557,7 @@ It might be interesting to note that for the example of computation graphs we re
 
 \subsection{Formal Framework for Stability}
 
-To measure the distance between two graph shift operators, and consequently the distance between the graphs they are derived from, we use $d_{\cP}(S, \hat{S})$, noted $||S - \hat{S}||_\cP$ in \cite{gama2020stability},  defined as $d_\cP(S,\hat{S})=\underset{P \in \cP}{\min} ||S-P \hat{S} P^T ||$ where $\cP$ is the set of permutation matrices. We change the notations to highlight the fact that the quantity depends on the two matrices $S,\hat{S}$ and not on the difference $S-\hat{S}$. The definition of $d_\cP$ can be extended to general continuous operators $\Psi, \hat{\Psi}: \mathbb{R}^N \to \mathbb{R}^N$ by $d_\cP (\Psi, \hat{\Psi}) = \underset{P \in \cP}{\min} \ \underset{||x|| = 1}{\max} \ || P^T \Psi (x) - \hat{\Psi}(P^T x) ||$.
+To measure the distance between two graph shift operators, and consequently the distance between the graphs they are derived from, we use $d_{\cP}(S, \hat{S})$, noted $||S - \hat{S}||_\cP$ in \citeGnn{gama2020stability},  defined as $d_\cP(S,\hat{S})=\underset{P \in \cP}{\min} ||S-P \hat{S} P^T ||$ where $\cP$ is the set of permutation matrices. We change the notations to highlight the fact that the quantity depends on the two matrices $S,\hat{S}$ and not on the difference $S-\hat{S}$. The definition of $d_\cP$ can be extended to general continuous operators $\Psi, \hat{\Psi}: \mathbb{R}^N \to \mathbb{R}^N$ by $d_\cP (\Psi, \hat{\Psi}) = \underset{P \in \cP}{\min} \ \underset{||x|| = 1}{\max} \ || P^T \Psi (x) - \hat{\Psi}(P^T x) ||$.
 
         
 \paragraph{Limitations} There are two main challenges to apply the preceding framework. Firstly, computing $d_\cP(S,\hat{S})$ is more general than determining if the graphs are isomorphic, so it is not feasible for large $n$ in general. (Indeed, if $S$ is the adjacency matrix, then two graphs $G$ and $\hat{G}$ are isomorphic if and only if there exists $P \in \cP$ s.t. $S=P \hat{S} P^T$, which is equivalent to $d_\cP(S,\hat{S})=0$.) Secondly, we can only compare matrices that have the same size, i.e. graphs that have the same number of nodes. However, we seek to measure the perturbation induced by the deletion of tuples in the database, which corresponds to node deletion in the graph.
@@ -493,7 +572,7 @@ To measure the distance between two graph shift operators, and consequently the 
 
 \subsection{Theoretical results}
 
-    We take advantage of the fact that we only use filters that are polynomial of order 1 to refine the theorem 4 of \cite{gama2020stability}. The two main improvements that are allowed by this simplification is the fact that the inequality is now a global inequality and there is no dependency in $N$.
+    We take advantage of the fact that we only use filters that are polynomial of order 1 to refine the theorem 4 of \citeGnn{gama2020stability}. The two main improvements that are allowed by this simplification is the fact that the inequality is now a global inequality and there is no dependency in $N$.
 
     \begin{theorem}
     \label{thm:stability_general}
@@ -540,7 +619,7 @@ To measure the distance between two graph shift operators, and consequently the 
                 &\leq  L A (F \ninf{H} )^ {L-1} d_\cP(S,\hat{S}).
             \end{align*}\\
 
-            We now prove the theorem \ref{thm:stability_general}. The method used is very close from what is done in \cite{gama2020stability}.
+            We now prove the theorem \ref{thm:stability_general}. The method used is very close from what is done in \citeGnn{gama2020stability}.
             
             We show a more precise theorem by using the bound 
             
@@ -775,5 +854,7 @@ To measure the distance between two graph shift operators, and consequently the 
     This is schematised by the last line of the figure, \ref{fig:stability}. In the last line of the figure, are compared the results of downs stream tasks computed from $\mathbb{D}$ and the ones obtained using $\pi (\mathbb{D})$. In this figure, we are not comparing from which embedding we are retrieving the highest accuracy, but if the results obtained from the two structures are similar. 
 \end{definition}
 
+	\bibliographystyleGnn{apalike}
+	\bibliographyGnn{biblio_gnn}
 
 \end{document}

@@ -430,10 +430,21 @@ We now provide two theoretical properties on computation graphs. These two prope
 Note that the only thing required by the proof is that the result of the aggregation operation $+$ (denoted by $\sum$ in the computation) does not depend on the order of its arguments.\\
 
 \begin{property}[Modularity of computation graphs]
-	We consider two computation graphs $G_1,G_2$ with $G_1$ having only one output node and $G_2$ having only one input node. We define $G_{1 \circ 2}$ as the computation graph that contains the disjoint union of $G_1$ and $G_2$ with 
+	We consider two computation graphs $G_1,G_2$ over the same near-semiring $(F,+,\cdot,0,id)$. We asuume that $G_1$ has only one output node and that $G_2$ has only one input node. 
+	
+	We define $G_{1 \circ 2}$ as the computation graph that contains the disjoint union of $G_1$ and $G_2$ with one edge with weight $id$ that connects the output of $G_1$ to the input of $G_2$. We assume that the symbolic function associated to the input of $G_2$ is $id$.
+	
+	Then we have $Retrieve(G_{1 \circ 2}) = Retrieve(G_2) \circ Retrieve(G_1)$.
 \end{property}
 
-[TODO: the distributivity axiom and the composition axiom are both made so we can use some subpart of a graph as black-boxes. Can we prove that if we have a black-box graph representing a function $f$, we can indeed plot other graphs at the begining/ at the end and the concatenation represents $g\circ  f \circ h$ ?]
+	The assumption done on the symbolic function of the only input of $G_2$ is natural: the symbolic functions are required to distinguish between the inputs, when there is only one input it is not necessary to use them.
+	
+	[TODO: interpretation of graphs as black boxes]
+	
+\begin{proof}
+12
+\end{proof}
+
 
 \subsection{Universal Object}
 

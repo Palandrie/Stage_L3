@@ -62,7 +62,7 @@
 
 [TODO: Remove table of contents (it stays for now for better readability)]
 
-\paragraph{abstract} TODO (Mention broad usage of computation graphs (compilers))
+\paragraph{abstract} TODO (Mention broad usage of computation graphs (compilers)) Provenance-based method
 
 Paragraph in model is a good starting poitn
 
@@ -173,8 +173,6 @@ In the algorithm \ref{alg:retrieve_fun}, we formalize the notion of ``function r
 
 \subsection{Model}
 
-[TODO: is modularity a good term ?]
-
 	In \citeComp{green_provenance_2007} and \citeComp{ramusat_semiring-based_2022}, the authors defined a set of identities and restrictions on the object of their studies (respectively relational databases and graph databases) and then used this set to identify an algebraic structure to theoretically model them.
 	
 	We follow the same method to characterize the minimal algebraic structure required to model a computation graph. An example of generalized computation graph is given in Figure \ref{fig:graphe_calc_abstr}. In what follows, we describe the different properties of computation graphs and traduce them algebraically. The process is summarized in the table of Figure \ref{fig:table_algebraic_structure} and specific instances where the described properties are necessary are presented in Figure \ref{fig:drawings_algebraic_struct}. In the examples of Figure \ref{fig:drawings_algebraic_struct}, the symbolic functions are omitted for better readability.
@@ -226,7 +224,7 @@ Firstly, since there is no natural order on incoming edges for a node, $+$ must 
 
 	To abstract the concept of zero-weight, we require the existence of a neutral element $0$ which is a left absorbing element for the $\circ$ operator and which is a neutral element for $+$. For an example, see the Figure \ref{subfig:drawings_zero}.
 
-	We require the left distributivity $(f+g) \circ h = f \circ h + g \circ h$ beacuse it is of theoretical interest (it is necessary for the interpretation of near-semirings as sub-near-semirings of the the complete near-semiring over a monoid), because it is a natural identity to interpret the elements as functions and because it allows for a simplification of the computation in some cases. For an example, see the Figure \ref{subfig:drawings_distr}.
+	We require the left distributivity $(f+g) \circ h = f \circ h + g \circ h$ because it is of theoretical interest (it is necessary for the interpretation of near-semirings as sub-near-semirings of the the complete near-semiring over a monoid), because it is a natural identity to interpret the elements as functions and because it allows for a simplification of the computation in some cases. For an example, see the Figure \ref{subfig:drawings_distr}.
 
 	Finally, we require the existence of a neutral element $id$ for $\circ$. This might not be crucial, but it has interesting theoretical properties -it matters for theorem \ref{thm:near_semirings_fun_monoids}- and allows some natural representation. For an example, see the Figure \ref{subfig:drawings_id}.
 	\\
@@ -235,7 +233,7 @@ Firstly, since there is no natural order on incoming edges for a node, $+$ must 
 		\centering
 		\begin{tabular}{|C{7.5cm}|C{7.5cm}|}
 			\hline 
-			\textbf{Property on the computation graph} & \textbf{Algebraic traduction of the property} \\ 
+			\textbf{Property on the computation graph} & \textbf{Algebraic translastion of the property} \\ 
 			\hline 
 			The edges that enter a node are not ordered & + is associative and commutative \\ 
 			\hline
@@ -276,7 +274,7 @@ Firstly, since there is no natural order on incoming edges for a node, $+$ must 
 			\path[->,draw] (y) -- node[midway,above] {$f_2$} (res);
 			\path[->,draw] (z) -- node[midway,above] {$f_3$} (res);
 		\end{tikzpicture}
-		\caption{A case that necessits the ``$+$" operator to be commutative and associative. Indeed, these two graphs are the same represented in two different ways, and the left one represent the element $(f_1+f_2)+f_3$ whereas the right one represents $(f_3 + f_2) + f_1$. Replacing $f_3$ by $0$ then shows that $+$ must be comutative, and using the commutativity of $+$ shows that the right expression is equal to $f_1 + (f_2 + f_3)$, so the associativity is required too.}
+		\caption{A case that necessitates the ``$+$" operator to be commutative and associative. Indeed, these two graphs are the same represented in two different ways, and the left one represent the element $(f_1+f_2)+f_3$ whereas the right one represents $(f_3 + f_2) + f_1$. Replacing $f_3$ by $0$ then shows that $+$ must be commutative, and using the commutativity of $+$ shows that the right expression is equal to $f_1 + (f_2 + f_3)$, so the associativity is required too.}
 		\label{subfig:drawings_plus}
 	\end{subfigure}
 
@@ -400,7 +398,7 @@ The $\mathcal{C}^\infty$ functions over the real numbers form a near-semiring wi
 
 \begin{ns}[Semirings]
 \label{ns:semirings}
-	Let $(S,+,\cdot,0,1)$ be a semiring. Then $(S,+,\cdot,0,1)$ is also a \Ns . Indeed, the axioms of \Ns\ are stricly more general than those of a semiring. The interpretation of semirings as sets of function together with the interpretation of $\cdot$ as a composition can be made through the structure of semimodules, which is itself a sub-\Ns\ of the complete \Ns\ over a monoid.
+	Let $(S,+,\cdot,0,1)$ be a semiring. Then $(S,+,\cdot,0,1)$ is also a \Ns . Indeed, the axioms of \Ns\ are strictly more general than those of a semiring. The interpretation of semirings as sets of function together with the interpretation of $\cdot$ as a composition can be made through the structure of semimodules, which is itself a sub-\Ns\ of the complete \Ns\ over a monoid.
 \end{ns}
 
 \subsection{Properties of Generalized Computation Graphs}
@@ -409,6 +407,7 @@ The $\mathcal{C}^\infty$ functions over the real numbers form a near-semiring wi
 We now provide two theoretical properties on computation graphs. These two properties ensure that the model 
 
 \begin{property}
+\label{prop:topological_ordering}
 	The output of algorithm \ref{alg:retrieve_fun} does not depend on the topological ordering chosen in the execution.
 \end{property}
 
@@ -424,13 +423,13 @@ We now provide two theoretical properties on computation graphs. These two prope
 	 
 	 If $v_{i+1}$ is an input node, then $Function_1[v_{i+1}]=f_{v_{i+1}}=Function_2[v_{i+1}]$.
 	 
-	 Else, by definition, $Function_1[v_{i+1}]=\Sum{e=(u,v_{i+1}) \in E}{} Fun(e) \circ Function_1[u]$. However, since all the vertices $u$ that appear in the sum are before $v$ in the topologicale ordering, by the induction hypothesis this can be rewritten: $Function_1[v_{i+1}]=\Sum{e=(u,v_{i+1}) \in E}{} Fun(e) \circ Function_2[u]=Function_2[v_{i+1}]$, which conclude the proof.
+	 Else, by definition, $Function_1[v_{i+1}]=\Sum{e=(u,v_{i+1}) \in E}{} Fun(e) \circ Function_1[u]$. However, since all the vertices $u$ that appear in the sum are before $v$ in the topological ordering, by the induction hypothesis this can be rewritten: $Function_1[v_{i+1}]=\Sum{e=(u,v_{i+1}) \in E}{} Fun(e) \circ Function_2[u]=Function_2[v_{i+1}]$, which conclude the proof.
 \end{proof}
 
 Note that the only thing required by the proof is that the result of the aggregation operation $+$ (denoted by $\sum$ in the computation) does not depend on the order of its arguments.\\
 
 \begin{property}[Modularity of computation graphs]
-	We consider two computation graphs $G_1,G_2$ over the same near-semiring $(F,+,\cdot,0,id)$. We asuume that $G_1$ has only one output node and that $G_2$ has only one input node. 
+	We consider two computation graphs $G_1,G_2$ over the same near-semiring $(F,+,\cdot,0,id)$. We assume that $G_1$ has only one output node and that $G_2$ has only one input node. 
 	
 	We define $G_{1 \circ 2}$ as the computation graph that contains the disjoint union of $G_1$ and $G_2$ with one edge with weight $id$ that connects the output of $G_1$ to the input of $G_2$. We assume that the symbolic function associated to the input of $G_2$ is $id$.
 	
@@ -439,35 +438,66 @@ Note that the only thing required by the proof is that the result of the aggrega
 
 	The assumption done on the symbolic function of the only input of $G_2$ is natural: the symbolic functions are required to distinguish between the inputs, when there is only one input it is not necessary to use them.
 	
-	[TODO: interpretation of graphs as black boxes]
-	
 \begin{proof}
-12
+
+	Let $T_1$ be a topological ordering of $G_1$, $T_2$ be a topological ordering of $G_2$. Then $T$ which is the concatenation of $T_1$ and $T_2$ is a topological ordering of $G_{1 \circ 2}$. According to property \ref{prop:topological_ordering}, we can choose any topological ordering for the execution of algorithm \ref{alg:retrieve_fun}. Therefore, for $i \in \{ 1,2\}$, we consider the execution of algorithm \ref{alg:retrieve_fun} for the topological ordering $T_i$ of $G_i$ and we note $F_i$ the array of functions that is created during this execution.
+	
+	We now consider an execution of algorithm \ref{alg:retrieve_fun} for the topological ordering $T$ of $G_{1 \circ 2}$ and note $F$ the array of functions that is created during the execution. Firstly, it is clear that $\forall v_1 \in V_1, F_1[v_1]=F[v_1]$, and in particular, if $out_1$ is the output node of $G_1$, then $Retrieve(G_1)=F_1[out_1]=F[out_1]$. We note $f_1 = F[out_1]$ this value.\\
+	
+	We show by induction on the nodes $V_2$, with the ordering given by $T_2$, that $F[v_2]=F_2[v_2] \circ f_1$.
+	
+	The base case is for the input node of $G_2$, noted $in_2$. On the one hand, we have $F_2[in_2]=id$ because the symbolic function associated to $in_2$ is $id$ by hypothesis. On the other hand, $F[in_2]=id \circ F[out_1] = f_1$ because in $G_{1 \circ 2}$, $in_2$ is connected to $out_1$ by an edge with weight $id$.\\
+	
+	We now assume that we the property holds for all vertices of $V_2$ that precede a vertex $v$ according to $T_2$ and we show that the property then holds for $v$ as well.
+	
+	 By definition, $F[v] = \Sum{e=(u,v) \in E_{1 \circ 2}}{} Fun(e) \circ F[u]$. Since $v$ is not the input node of $G_2$, this can be rewritten: $F[v] = \Sum{e=(u,v) \in E_{2}}{} Fun(e) \circ F[u]$. Then, using the induction hypothesis on the $u$, that necessarily precede $v$ in the topological ordering, we get:
+	 \begin{align*}
+	 F[v] &= \Sum{e=(u,v) \in E_{2}}{} Fun(e) \circ F[u] \\
+	 &= \Sum{e=(u,v) \in E_{2}}{} Fun(e) \circ (F_2[u] \circ f_1) \\
+	 &= \Sum{e=(u,v) \in E_{2}}{} (Fun(e) \circ F_2[u]) \circ f_1 \\
+	 &= (\Sum{e=(u,v) \in E_{2}}{} Fun(e) \circ F_2[u]) \circ f_1 \\
+	 &= F_2[v] \circ f_1
+	 \end{align*}
+	
+	where we used the associativity of $\circ$, the distributivity of $+$ over $\circ$ and the definition of $F_2$. We use an abuse of notation while referring to $Fun$ as the function that gives the weight of the edges in $G_2$ and in $G_{1 \circ 2}$.
+	
+	This conclude the proof.
+	
 \end{proof}
+
+	Theoretically, this property is interesting because it shows that the two conditions that were necessary for modularity -distributivity and associativity of $\circ$- are sufficient.
+	
+	It also has practical influence because it means that when we have computed the function associated to a sub-graph, then we can reuse it in different settings, which enable the use of techniques like dynamic programming.
 
 
 \subsection{Universal Object}
 
-TODO write this properly:
+	In this section we identify the \sns\ generated by a subset $G \subset F$ of a \Ns\ $F$. This notion matters because this provides the form of the result that we can expect from the algorithm $Retrieve$. For instance, in the context of databases, the universal object for semiring provenance is the semiring of polynomials over integers $\N[X]$ \citeComp{green_provenance_2007}.
+	Similarly, in \citeComp{ramusat_semiring-based_2022}, the provenance over a graph database between two points $x$ and $y$ could be expressed as the sum of the weight of the paths between two points, which is also a polynomial on the weights of the edges.\\
+	
+	In our settings, unfortunately, the universal object is slightly more complicated, as shown below.
 
-In Ramusat we had :
-	The full computation represented by the graph cannot be expressed in a similar fashion as for provenance in graphs ($\underset{\pi \in P_{x,y}}{\sum} w(\pi)$) because composition does not distribute over $+$.
-In Green : polynomials
-
-Us ?
-\\
-
-
-Given a \Ns\ $F$, we want to characterize the sub-near-semiring generated by a subset $G \subset F$. This notion makes sense for the usual reason: an intersection of sub-near-semiring is a \sns\ itself, and we note $<G>$ this \sns\ .
+Formally, given a \Ns\ $F$, we want to characterize the sub-near-semiring generated by a subset $G \subset F$. This notion makes sense for the usual reason: an intersection of sub-near-semiring is a \sns\ itself, and we note $<G>$ this \sns\ .
 
 For this purpose we define a sequence of sets $(G_n)$ by $G_0=\{0,id\} \cup G$ and 
 $$G_{n+1} = \left\{ \left. g \circ \left( \overset{k}{\underset{i=1}{\sum}} g_i \right) \right| \ k \in \N, g \in G, (g_i)_{1 \leq i \leq n} \in (G_n)^k \right\} .$$
 
-	The claim is now that $<G> = \underset{n \in \N}{\cup} G_n$. Indeed, $G \subset G_0 \subset \underset{n \in \N}{\cup} G_n$, then we show by induction that $\forall n \in \N, G_n \subset <G>$ and finally we show that $\underset{n \in \N}{\cup} G_n$ is indeed a \sns\ of $F$.
+	We can now state the property:
+	\begin{property}
+	\label{prop:sns_generated}
+		$<G> = \underset{n \in \N}{\cup} G_n$. 
+	\end{property}
+		
+	Indeed, $G \subset G_0 \subset \underset{n \in \N}{\cup} G_n$, then we show by induction that $\forall n \in \N, G_n \subset <G>$ and finally we show that $\underset{n \in \N}{\cup} G_n$ is indeed a \sns\ of $F$.\\
 	
-	[TODO: Write this proof cleanly or rewrite the section]
-
+	For instance, the result of $Retrieve$ on the computation graph of Figure \ref{fig:graphe_calc_abstr} is 
+	$$f_7 \circ (f_3 \circ (f_1 \circ x + g_1 \circ y) + f_4 \circ (f_2 \circ x + g_2 \circ y) ) + f_8 \circ f_4 \circ (f_2 \circ x + g_2 \circ y).$$
+	
+	This expression, that is already complicated for a small graph, cannot be expressed in much simpler way due to the result of property \ref{prop:sns_generated}.
+	
 \subsection{Generality of the Complete Near-semiring over a Monoid.}
+
+	The generality of the near-semiring structure is needed to model computation graphs as shown earlier, but to instantiate the theory efficiently we need to understand how to create near-semirings. The theorem shown in this section provide such a tool, by giving a form for near-semirings.
 
 \begin{theorem}{Universal Form of Near-semirings}
 \label{thm:near_semirings_fun_monoids}
@@ -516,35 +546,42 @@ $$G_{n+1} = \left\{ \left. g \circ \left( \overset{k}{\underset{i=1}{\sum}} g_i 
 
 \end{proof}
 
-	This theorem is interesting because it clearly indicates a direction for further investigation -if we want to instantiate the theoretical framework, we should define computation graphs over some monoids- and a limit of the expresiveness of the theory. However, it does not provide any information on the structure of near-semirings.
-
-
-It might be interesting to note that for the example of computation graphs we restrict ourselves to finitely generated monoids, because the computation only involves a finite number of elements.
 
 \section{Instantiation of the Theory}
 
 	\subsection{Layer-Wise Relevance Propagation}
-	
-		[Founded on LRP overview, https://iphome.hhi.de/samek/pdf/MonXAI19.pdf]
+
 		
-		[Dependance or not on an execution, want to do the computation once or several times]
-		
-	Layer-Wise Relevance Propagation (LRP) is a technique used to explain the prediction made by a neural network on one of its execution. The idea of the technique is to propagate backwards the contribution (or the \textit{relevance}) of neurons in the network to the final prediction of the model. The general formula is 
+	Layer-Wise Relevance Propagation (LRP) is a technique used to explain the prediction made by a neural network on one of its execution \citeComp{samek_layer-wise_2019}. The idea of the technique is to propagate backwards the contribution (or the \textit{relevance}) of neurons in the network to the final prediction of the model. The general formula is 
 		$$ R_j = \underset{k}{\sum} \frac{z_{j,k}}{\sum_j z_{j,k}} R_k .$$
 		
 	The value $R_j$ is the score of the neuron $j$, and it is computed by summing over all neurons $k$ in the next layer the term $\frac{z_{j,k}}{\sum_j z_{j,k}} R_k$, where $R_k$ is the relevance of neuron $k$ and $\frac{z_{j,k}}{\sum_j z_{j,k}}$ represents the extent to which neuron $j$ contributed to the relevance of the neuron $k$.
 		
-	The normalization term ensures that vanishing phenomenoms cannot occur: the sum of the relevances of neurons on a given layer is preserved.
+	The normalization term ensures that vanishing phenomenons cannot occur: the sum of the relevances of the neurons on a given layer is preserved.
 		\\
 		
 	We should now discuss the interpretation of LRP as an instantiation of our model.
 		
 	We can model LRP with generalized computation graphs. Indeed, the input nodes of the computation graphs are the output neurons of the network (or even the only neuron corresponding to the class predicted, since the value of other neurons is set to zero), the edges of the computation graph are the reversed edges of the neuron and the associated function is the multiplication by the scalar $\frac{z_{j,k}}{\sum_j z_{j,k}}$ (between neurons $k$ and $j$).
 	
+	However, since the computations made to compute the relevance depend on an execution, it might be of limited interest to construct the computation graph to use it only one time.
+	
 		
 \subsection{Quantization}
 	
-	[TODO: Quantization]
+	The result of theorem \ref{thm:near_semirings_fun_monoids} tells that we can execute neural networks on monoids, and not only on real numbers as we usually do.
+	
+	This method actually already exists and is called quantization \citeComp{wu2020integerquantizationdeeplearning}. The method consists of training neural networks on high precision representation of real numbers and then discretize the weights of the network. This allows for faster execution of the neural networks, that uses less memory and bandwidth.\\
+	
+	I have done an experiment on a simple example of a network trained to learn the $xor$ function, and the result suggest that the method leads to simpler model, that may be less precise but could also be more reliable and interpretable -at least for small ones. The experiment are shown in Figure \ref{fig:xor_example}.
+	
+	\begin{figure}
+	\centering
+	\includegraphics[scale=0.5]{../computational\_graphs/code/continuous_xor.pdf}
+\includegraphics[scale=0.5]{../computational\_graphs/code/discrete_xor.pdf}
+	\caption{The decision boundaries of the network trained to learn $xor$ before and after quantization. The weights are transformed from float to integers.}
+	\label{fig:xor_example}
+	\end{figure}
 	
 \section{Conclusion}
 
@@ -554,17 +591,21 @@ It might be interesting to note that for the example of computation graphs we re
 	\bibliographyComp{biblio_computation_graphs}	
 	
 \section{Extra work - GNN Stability}
-	While investigating the possibility to theoretically model a neural network, I met a Ph.D student that was working on graph neural networks (GNN). GNNs are used to embed graphs in metric spaces and its objective is to extend this technique in order to embed databases.
+	While investigating the theoretical modeling of neural network, I met a Ph.D student that was researching the application of the graph neural network (GNN) framework for databases.
 	
-	My contribution in this work was to adapt result on stability to our precise setting, and the hypotheses used in our work even allowed me to improve existing results.
-
-	A graph neural network (GNN) is a particular type of neural network that is meant to represent graph-structured data in $\R^d$ while taking into account the relations between the data points. Such representations, or embeddings, are interesting because we can then apply usual machine learning techniques to the transformed data.
+	GNNs are a class of neural network that is meant to represent graph-structured data in $\R^d$ while taking into account the relations between the data points and initial feature information on the nodes. Such representations, or embeddings, are valuable because we can then apply usual machine learning techniques to the transformed data. However, for the method to be effective on perturbed databases, we need to ensure that the embeddings of the perturbed database are close the embeddings of the original database. This notion is referred to as stability. 
 	
-	However, for such schemes to be meaningful we need to ensure that the embeddings are coherent 
+	My contribution in this work was to adapt result on stability to our precise setting. The more restrictive hypotheses used in our work even allowed me to improve existing results.
 
 \subsection{Definition of GNNs}
 
+	We begin by defining the GNNs that we use in this work and describe how we can embed nodes using this method. Further theory on GNNs can be found in \citeGnn{hamilton_grl}.
+
+	\begin{definition}[GNNs]
 	
+		A graph neural network for graphs with $n$ nodes is a function $\Phi: S_n(\R) \times R^n \to \R^n$.
+	
+	\end{definition}
 
 \subsection{Formal Framework for Stability}
 
@@ -707,7 +748,7 @@ To measure the distance between two graph shift operators, and consequently the 
                 ||\Phi(S,x)|| &\leq \Sum{i=1}{F_L} ||H_i(S) \Phi^{(L)}_i(S,x) || \\
                 &\leq F_L \ninf{H^{(L)}} || \Phi^{(L)}_i(S,x) || \\
                 &\leq F_L \ninf{H^{(L)}} \left( \Prod{i=0}{L-1} F_i \right) \left( \Prod{i=0}{L-1} \ninf{H^{(i)}} \right) ||x|| \\
-                &= \left( \Prod{i=0}{L} F_i \right) \left( \Prod{i=0}{L-1} \ninf{H^{(i)}} \right) ||x||
+                &= \left( \Prod{i=0}{L} F_i \right) \left( \Prod{i=0}{L} \ninf{H^{(i)}} \right) ||x||
             \end{align*}
 
             where we used the induction hypothesis to bound $|| \Phi^{(L)}_i(S,x) ||$. This concludes the proof of the lemma.\\
@@ -840,6 +881,13 @@ To measure the distance between two graph shift operators, and consequently the 
 
         \end{proof}
 
+
+
+	\bibliographystyleGnn{apalike}
+	\bibliographyGnn{biblio_gnn}
+
+\end{document}
+
     \subsection{Instantiation for Databases}
      
     \begin{definition}{Error relative to the perturbation}
@@ -864,8 +912,3 @@ To measure the distance between two graph shift operators, and consequently the 
 
     This is schematised by the last line of the figure, \ref{fig:stability}. In the last line of the figure, are compared the results of downs stream tasks computed from $\mathbb{D}$ and the ones obtained using $\pi (\mathbb{D})$. In this figure, we are not comparing from which embedding we are retrieving the highest accuracy, but if the results obtained from the two structures are similar. 
 \end{definition}
-
-	\bibliographystyleGnn{apalike}
-	\bibliographyGnn{biblio_gnn}
-
-\end{document}
